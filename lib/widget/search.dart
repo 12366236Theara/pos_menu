@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pos_menu/Extension/appColorsExtension.dart';
 
 class Search extends StatefulWidget {
   final String hint;
@@ -12,23 +13,31 @@ class Search extends StatefulWidget {
   State<Search> createState() => _SearchState();
 }
 
-class _SearchState extends State<Search> {
+class _SearchState extends State<Search> with SingleTickerProviderStateMixin {
   bool _isFocused = false;
   final FocusNode _focusNode = FocusNode();
+  late AnimationController _glowCtrl;
+  late Animation<double> _glowAnim;
 
   @override
   void initState() {
     super.initState();
+    _glowCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _glowAnim = CurvedAnimation(parent: _glowCtrl, curve: Curves.easeOutCubic);
+
     _focusNode.addListener(() {
-      setState(() {
-        _isFocused = _focusNode.hasFocus;
-      });
+      final focused = _focusNode.hasFocus;
+      setState(() => _isFocused = focused);
+      focused ? _glowCtrl.forward() : _glowCtrl.reverse();
     });
+
+    widget.controller.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _focusNode.dispose();
+    _glowCtrl.dispose();
     super.dispose();
   }
 
@@ -40,45 +49,87 @@ class _SearchState extends State<Search> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _isFocused ? Colors.pink.shade300 : Colors.grey.shade200, width: _isFocused ? 2 : 1),
-          boxShadow: [
-            BoxShadow(
-              color: _isFocused ? Colors.pink.withOpacity(0.1) : Colors.black.withOpacity(0.03),
-              blurRadius: _isFocused ? 12 : 8,
-              offset: Offset(0, _isFocused ? 4 : 2),
+    final hasText = widget.controller.text.isNotEmpty;
+    final pink = Theme.of(context).colorScheme.primary; // ← was static const _pink
+    final hintColor = context.appColors.textHint; // ← was Colors.grey.shade400
+    final textColor = context.appColors.textPrimary; // ← was Color(0xFF1A1D2E)
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: AnimatedBuilder(
+        animation: _glowAnim,
+        builder: (context, child) {
+          return Container(
+            height: 50,
+            decoration: BoxDecoration(
+              color: context.appColors.surface, // ← was context.appColors.header (surface fits better for input)
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: _isFocused
+                    ? pink.withOpacity(0.45) // ← pink border on focus
+                    : context.appColors.border, // ← theme border at rest
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(color: pink.withOpacity(0.10 * _glowAnim.value), blurRadius: 18, spreadRadius: 0, offset: const Offset(0, 4)),
+                BoxShadow(color: Colors.black.withOpacity(0.04 * (1 - _glowAnim.value)), blurRadius: 6, offset: const Offset(0, 2)),
+              ],
             ),
-          ],
-        ),
+            child: child,
+          );
+        },
         child: TextField(
           controller: widget.controller,
           focusNode: _focusNode,
-          onChanged: widget.onChanged,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF2D3142)),
+          onChanged: (v) {
+            setState(() {});
+            widget.onChanged?.call(v);
+          },
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: textColor, // ← was Color(0xFF1A1D2E)
+          ),
+
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.grey.shade400),
-            prefixIcon: Container(
-              padding: const EdgeInsets.all(12),
-              child: AnimatedContainer(
+
+            hintStyle: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: hintColor, // ← was Colors.grey.shade400
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(left: 14, right: 10),
+              child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
-                child: Icon(Icons.search_rounded, color: _isFocused ? Colors.pink.shade400 : Colors.grey.shade400, size: 24),
+                child: Icon(
+                  Icons.search_rounded,
+                  key: ValueKey(_isFocused),
+                  color: _isFocused ? pink : hintColor, // ← was _pink : Colors.grey.shade400
+                  size: 22,
+                ),
               ),
             ),
-            suffixIcon: widget.controller.text.isNotEmpty
-                ? _ClearButton(onTap: _clearSearch)
-                : Container(
-                    padding: const EdgeInsets.all(12),
-                    child: Icon(Icons.tune_rounded, color: Colors.grey.shade400, size: 22),
-                  ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            prefixIconConstraints: const BoxConstraints(minWidth: 46, minHeight: 46),
+            suffixIcon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+              child: hasText
+                  ? _ClearButton(key: const ValueKey('clear'), onTap: _clearSearch)
+                  : Padding(
+                      key: const ValueKey('filter'),
+                      padding: const EdgeInsets.only(right: 14),
+                      child: Icon(
+                        Icons.tune_rounded,
+                        color: hintColor, // ← was Colors.grey.shade400
+                        size: 20,
+                      ),
+                    ),
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
           ),
         ),
       ),
@@ -88,32 +139,42 @@ class _SearchState extends State<Search> {
 
 class _ClearButton extends StatefulWidget {
   final VoidCallback onTap;
-
-  const _ClearButton({required this.onTap});
+  const _ClearButton({super.key, required this.onTap});
 
   @override
   State<_ClearButton> createState() => _ClearButtonState();
 }
 
 class _ClearButtonState extends State<_ClearButton> {
-  bool _isHovered = false;
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final pink = Theme.of(context).colorScheme.primary; // ← was Color(0xFFE8316A)
+    final iconColor = context.appColors.textSecondary; // ← was Colors.grey.shade500
+    final idleBg = context.appColors.surface; // ← was Colors.grey.shade200
+
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Container(
-          padding: const EdgeInsets.all(12),
+        child: Padding(
+          padding: const EdgeInsets.only(right: 12),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(color: _isHovered ? Colors.pink.shade100 : Colors.grey.shade200, shape: BoxShape.circle),
-            child: Icon(Icons.close_rounded, color: _isHovered ? Colors.pink.shade600 : Colors.grey.shade600, size: 16),
+            duration: const Duration(milliseconds: 180),
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              color: _hovered ? pink.withOpacity(0.12) : idleBg, // ← was hardcoded pink tint / grey.shade200
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.close_rounded,
+              size: 15,
+              color: _hovered ? pink : iconColor, // ← was Color(0xFFE8316A) : Colors.grey.shade500
+            ),
           ),
         ),
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:pos_menu/model/ingredeint/ingredient_model.dart';
 import 'package:pos_menu/model/menu/menu_option_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProviderListener with ChangeNotifier {
   bool? enabltem;
@@ -22,6 +24,29 @@ class ProviderListener with ChangeNotifier {
 
   var totalSplitPrice = 0.0;
   var oldPrice = 0.0;
+
+  static const _key = 'isDarkMode';
+  bool _isDark = false;
+
+  bool get isDark => _isDark;
+  ThemeMode get themeMode => _isDark ? ThemeMode.dark : ThemeMode.light;
+
+  ProviderListener() {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isDark = prefs.getBool(_key) ?? false;
+    notifyListeners();
+  }
+
+  Future<void> toggle() async {
+    _isDark = !_isDark;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_key, _isDark);
+    notifyListeners();
+  }
 
   double calculateOptChoicePrice(List<MenuOption>? options) {
     if (options == null) return 0;

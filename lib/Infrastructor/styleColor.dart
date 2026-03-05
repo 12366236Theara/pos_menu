@@ -23,6 +23,20 @@ class StyleColor {
   static TextStyle textHeaderStyleKhmerKhAngBRodtha = const TextStyle(fontFamily: 'Kh Ang B.Rodtha', fontSize: 20);
   static TextStyle textHeaderStyleKhmerKhAngBRodthaWhite = const TextStyle(fontFamily: 'Kh Ang B.Rodtha', fontSize: 20, color: Colors.white);
   static TextStyle textHeaderStyleKhmerContent18Bold = const TextStyle(fontFamily: 'NotoSans', fontSize: 18, fontWeight: FontWeight.bold);
+  static const Color pink = Color(0xFFE8316A);
+
+  static Color scaffold(bool dark) => dark ? const Color(0xFF0F1117) : const Color(0xFFF8F8FA);
+  static Color card(bool dark) => dark ? const Color(0xFF1C1F2E) : Colors.white;
+  static Color surface(bool dark) => dark ? const Color(0xFF252837) : const Color(0xFFF2F2F7);
+  static Color header(bool dark) => dark ? const Color(0xFF1C1F2E) : Colors.white;
+  static Color divider(bool dark) => dark ? const Color(0xFF2E3147) : const Color(0xFFF0F0F2);
+  static Color border(bool dark) => dark ? const Color(0xFF2E3147) : Colors.grey.shade200;
+  static Color chipBg(bool dark) => dark ? const Color(0xFF252837) : Colors.white;
+  static Color chipBorder(bool dark) => dark ? const Color(0xFF3A3D52) : Colors.grey.shade300;
+
+  static Color textPrimary(bool dark) => dark ? const Color(0xFFF0F0F5) : const Color(0xFF1A1D2E);
+  static Color textSecondary(bool dark) => dark ? const Color(0xFF9094A8) : Colors.grey.shade500;
+  static Color textHint(bool dark) => dark ? const Color(0xFF6B6F82) : Colors.grey.shade400;
   static TextStyle textHeaderStyleKhmerContent18BoldAppBarColor = TextStyle(
     fontFamily: 'NotoSans',
     fontSize: 18,

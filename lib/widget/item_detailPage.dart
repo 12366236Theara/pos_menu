@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:pos_menu/API/domainame.dart';
+import 'package:pos_menu/Extension/appColorsExtension.dart';
 import 'package:pos_menu/model/menu/menu_model.dart';
 
 /// Call this from anywhere:
 class ItemDetailDialog {
   static void show(BuildContext context, {required MenuModel item}) {
+    final cardColor = Theme.of(context).cardTheme.color;
     showDialog(
       context: context,
 
@@ -22,6 +23,7 @@ class ItemDetailDialog {
         );
 
         return AlertDialog(
+          backgroundColor: cardColor,
           content: ConstrainedBox(
             constraints: dialogConstraint,
             child: _ItemDetailSheet(item: item),
@@ -52,7 +54,6 @@ class _ItemDetailSheetState extends State<_ItemDetailSheet> with TickerProviderS
   static const _dark = Color(0xFF1A1D2E);
 
   String get _imageUrl => '${Domain.baseUrl}/${widget.item.itemImg ?? ''}';
-  double get _total => (widget.item.itemPrice1 ?? 0) * _qty;
 
   @override
   void initState() {
@@ -82,6 +83,8 @@ class _ItemDetailSheetState extends State<_ItemDetailSheet> with TickerProviderS
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final screenH = MediaQuery.of(context).size.height;
+    final cardColor = Theme.of(context).cardTheme.color;
+    final textColor = context.appColors.textPrimary;
 
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(_sheetAnim),
@@ -89,14 +92,13 @@ class _ItemDetailSheetState extends State<_ItemDetailSheet> with TickerProviderS
         opacity: _sheetAnim,
         child: Container(
           constraints: BoxConstraints(maxHeight: screenH * 0.88),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: cardColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Drag Handle ──────────────────────────────────
               Padding(
                 padding: const EdgeInsets.only(top: 12, bottom: 4),
                 child: Container(
@@ -133,18 +135,18 @@ class _ItemDetailSheetState extends State<_ItemDetailSheet> with TickerProviderS
                               // Name
                               Text(
                                 widget.item.itemDesc ?? '',
-                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: _dark, height: 1.25, letterSpacing: -0.5),
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: textColor, height: 1.25, letterSpacing: -0.5),
                               ),
                               const SizedBox(height: 6),
 
                               // Code
                               Row(
                                 children: [
-                                  Icon(Icons.qr_code_rounded, size: 12, color: Colors.grey.shade400),
+                                  Icon(Icons.qr_code_rounded, size: 12, color: textColor),
                                   const SizedBox(width: 4),
                                   Text(
                                     widget.item.itemCode ?? '—',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
+                                    style: TextStyle(fontSize: 12, color: textColor, fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
@@ -290,7 +292,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: available ? Colors.green.shade50 : Colors.red.shade50,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: available ? Colors.green.shade200 : Colors.red.shade200),
       ),
@@ -349,29 +351,32 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = Theme.of(context).cardTheme.color;
+    final textColor = context.appColors.textPrimary;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F8FA),
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFEEEEF2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(data.icon, size: 14, color: const Color(0xFFE8316A)),
+          Icon(data.icon, size: 14, color: textColor),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 data.label,
-                style: TextStyle(fontSize: 9, color: Colors.grey.shade400, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+                style: TextStyle(fontSize: 9, color: textColor, fontWeight: FontWeight.w700, letterSpacing: 0.4),
               ),
               const SizedBox(height: 1),
               Text(
                 data.value,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1A1D2E)),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textColor),
               ),
             ],
           ),

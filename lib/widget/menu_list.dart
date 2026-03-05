@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pos_menu/API/domainame.dart';
+import 'package:pos_menu/Extension/appColorsExtension.dart';
 import 'package:pos_menu/model/menu/menu_model.dart';
 import 'package:pos_menu/widget/item_detailPage.dart';
 
@@ -66,6 +67,9 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = Theme.of(context).cardTheme.color;
+    final textColor = context.appColors.textPrimary;
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
@@ -83,7 +87,7 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
                 curve: Curves.easeOutCubic,
                 transform: Matrix4.identity()..translate(0.0, _isHovered ? -5.0 : 0.0, 0.0),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor, // ← was Colors.white
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -105,8 +109,6 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
                           fit: StackFit.expand,
                           children: [
                             _ItemImage(imageUrl: _imageUrl, isHovered: _isHovered),
-
-                            // Gradient fade at bottom of image
                             Positioned(
                               bottom: 0,
                               left: 0,
@@ -122,8 +124,6 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
                                 ),
                               ),
                             ),
-
-                            // Category Badge
                             if ((widget.item.catDescEn ?? '').isNotEmpty)
                               Positioned(
                                 top: 10,
@@ -151,43 +151,33 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Name
                               Expanded(
                                 child: Text(
                                   widget.item.itemDesc ?? '',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     height: 1.3,
-                                    color: Color(0xFF1A1D2E),
+                                    color: textColor, // ← was Color(0xFF1A1D2E)
                                     letterSpacing: -0.2,
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-
                               const SizedBox(height: 8),
-
-                              // Price + Cart Row
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  // Price
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '\$${widget.item.itemPrice1?.toStringAsFixed(2) ?? '0.00'}',
-                                        style: const TextStyle(
-                                          color: Color(0xFFE8316A),
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 15,
-                                          letterSpacing: -0.3,
-                                        ),
-                                      ),
-                                    ],
+                                  Text(
+                                    '\$${widget.item.itemPrice1?.toStringAsFixed(2) ?? '0.00'}',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15,
+                                      letterSpacing: -0.3,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -269,7 +259,7 @@ class _ImageError extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.restaurant_rounded, size: 36, color: Colors.grey.shade300),
+            Icon(Icons.no_sim_outlined, size: 36, color: Colors.grey.shade300),
             const SizedBox(height: 6),
             Text(
               'No Image',

@@ -52,12 +52,6 @@ class NetworkImageview extends StatelessWidget {
   }
 
   Widget _errorWidget() {
-    return Container(
-      width: width,
-      height: height,
-      color: backgroundColor,
-      alignment: Alignment.center,
-      child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 32),
-    );
+    return Container(width: width, height: height, color: backgroundColor, alignment: Alignment.center, child: Image.asset('assets/noimage.png'));
   }
 }

@@ -51,6 +51,7 @@ dependencies:
   dynamic_path_url_strategy: ^1.0.0
   decimal: ^3.2.4
   currency_code_to_currency_symbol: ^0.0.4
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:

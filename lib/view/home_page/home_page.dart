@@ -1,6 +1,9 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:pos_menu/Extension/appColorsExtension.dart';
+import 'package:pos_menu/Infrastructor/providerListener.dart';
+import 'package:pos_menu/model/category/category_model.dart';
 import 'package:pos_menu/model/store/store_model.dart';
 import 'package:pos_menu/widget/network_ImageView.dart';
 import 'package:provider/provider.dart';
@@ -64,13 +67,10 @@ class _HomePageState extends State<HomePage> {
   void _onSearchChanged() => setState(() {});
 
   void _onScroll() {
-    // Collapse app bar tracking
     final newExpanded = _scrollController.offset < 20;
     if (newExpanded != _isAppBarExpanded) {
       setState(() => _isAppBarExpanded = newExpanded);
     }
-
-    // Pagination: load more when near the bottom
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
       _loadNextPage();
     }
@@ -169,7 +169,7 @@ class _HomePageState extends State<HomePage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            backgroundColor: const Color(0xFFF8F8FA),
+            backgroundColor: Theme.of(context).cardTheme.color,
             body: const Center(child: CircularProgressIndicator(color: Color(0xFFE8316A))),
           );
         }
@@ -196,7 +196,7 @@ class _HomePageState extends State<HomePage> {
         }
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF8F8FA),
+          backgroundColor: Theme.of(context).cardTheme.color,
           body: RefreshIndicator(
             color: const Color(0xFFE8316A),
             onRefresh: _refreshData,
@@ -212,7 +212,8 @@ class _HomePageState extends State<HomePage> {
                       expandedHeight: 80,
                       floating: false,
                       pinned: true,
-                      backgroundColor: Colors.white,
+                      shadowColor: context.appColors.header,
+                      backgroundColor: context.appColors.header,
                       elevation: 0,
                       surfaceTintColor: Colors.transparent,
                       flexibleSpace: FlexibleSpaceBar(
@@ -237,24 +238,22 @@ class _HomePageState extends State<HomePage> {
                 // ── Search + Category ──
                 Consumer<CategoryProvider>(
                   builder: (context, catProvider, _) {
-                    return SliverToBoxAdapter(
-                      child: Column(
-                        children: [
-                          Search(hint: 'Search menu...', controller: _controller),
-                          Category(
-                            categories: catProvider.categories,
-                            selectedCategory: selectedCategory,
-                            onSelected: (cat, code) {
-                              setState(() {
-                                selectedCategory = cat;
-                                selectedCategoryCode = code;
-                                _currentPage = 1;
-                                _hasMorePages = true;
-                              });
-                              _refreshData();
-                            },
-                          ),
-                        ],
+                    return SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _CategoryHeaderDelegate(
+                        controller: _controller,
+                        categories: catProvider.categories,
+                        selectedCategory: selectedCategory,
+                        isScrolled: !_isAppBarExpanded, // turns on compact style after scroll
+                        onSelected: (cat, code) {
+                          setState(() {
+                            selectedCategory = cat;
+                            selectedCategoryCode = code;
+                            _currentPage = 1;
+                            _hasMorePages = true;
+                          });
+                          _refreshData();
+                        },
                       ),
                     );
                   },
@@ -297,7 +296,7 @@ class _HomePageState extends State<HomePage> {
                           switch (getScreenType(constraints.crossAxisExtent)) {
                             case ScreenType.desktop:
                               crossAxisCount = 5;
-                              aspectRatio = 0.72;
+                              aspectRatio = 1;
                               break;
                             case ScreenType.tablet:
                               crossAxisCount = 4;
@@ -305,7 +304,7 @@ class _HomePageState extends State<HomePage> {
                               break;
                             case ScreenType.mobile:
                               crossAxisCount = 2;
-                              aspectRatio = 0.68;
+                              aspectRatio = 0.78;
                           }
                           return SliverGrid(
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -314,23 +313,13 @@ class _HomePageState extends State<HomePage> {
                               mainAxisSpacing: 14,
                               childAspectRatio: aspectRatio,
                             ),
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final item = items[index];
-                                return RepaintBoundary(
-                                  key: ValueKey('menu-item-${item.itemCode}'),
-                                  child: MenuList(item: item, index: index, cartIconKey: _activeCartKey),
-                                );
-                              },
-                              childCount: items.length,
-                              findChildIndexCallback: (Key key) {
-                                final vk = key as ValueKey<String>?;
-                                if (vk != null) {
-                                  return items.indexWhere((i) => 'menu-item-${i.itemCode}' == vk.value);
-                                }
-                                return null;
-                              },
-                            ),
+                            delegate: SliverChildBuilderDelegate((context, index) {
+                              final item = items[index];
+                              return RepaintBoundary(
+                                key: ValueKey('menu-item-${item.itemCode}'),
+                                child: MenuList(item: item, index: index, cartIconKey: _activeCartKey),
+                              );
+                            }, childCount: items.length),
                           );
                         },
                       ),
@@ -347,6 +336,57 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final List<CategoryModel> categories;
+  final String selectedCategory;
+  final TextEditingController controller;
+  final Function(String, String?) onSelected;
+  final bool isScrolled;
+
+  _CategoryHeaderDelegate({
+    required this.categories,
+    required this.selectedCategory,
+    required this.onSelected,
+    required this.isScrolled,
+    required this.controller,
+  });
+
+  static const double _extent = 142.0;
+
+  @override
+  double get minExtent => _extent;
+
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  bool shouldRebuild(_CategoryHeaderDelegate old) =>
+      old.selectedCategory != selectedCategory ||
+      old.categories.length != categories.length ||
+      old.isScrolled != isScrolled ||
+      old.controller.text != controller.text;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final scrolled = shrinkOffset > 1.0 || isScrolled;
+
+    return Material(
+      color: Colors.transparent,
+      elevation: scrolled ? 2 : 0,
+      shadowColor: Colors.transparent,
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Search(hint: 'Search menu...', controller: controller),
+          Expanded(
+            child: Category(categories: categories, selectedCategory: selectedCategory, isScrolled: scrolled, onSelected: onSelected),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -435,8 +475,8 @@ class _AppBarBackground extends StatelessWidget {
           opacity: progress,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              color: context.appColors.header,
+              border: Border(bottom: BorderSide(color: context.appColors.header)),
             ),
             child: SafeArea(
               child: Padding(
@@ -452,7 +492,7 @@ class _AppBarBackground extends StatelessWidget {
                         tag: 'restaurant_logo',
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.appColors.card,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [BoxShadow(color: Colors.pink.withOpacity(0.1), blurRadius: 12, offset: const Offset(0, 4))],
                           ),
@@ -471,7 +511,7 @@ class _AppBarBackground extends StatelessWidget {
                             stop?.dbName ?? '',
                             minFontSize: 13,
                             maxFontSize: 18,
-                            style: TextStyle(fontSize: 18.h, fontWeight: FontWeight.bold, color: const Color(0xFF2D3142), letterSpacing: -0.5),
+                            style: TextStyle(fontSize: 18.h, fontWeight: FontWeight.bold, color: context.appColors.textPrimary, letterSpacing: -0.5),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -484,6 +524,32 @@ class _AppBarBackground extends StatelessWidget {
                         ActionButton(icon: 'assets/kh-flag.png'),
                         SizedBox(width: 12),
                       ],
+                    ),
+                    Consumer<ProviderListener>(
+                      builder: (context, themeProvider, _) {
+                        return GestureDetector(
+                          onTap: themeProvider.toggle,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: themeProvider.isDark ? const Color(0xFF252837) : const Color(0xFFF2F2F7),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                              child: Icon(
+                                themeProvider.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                                key: ValueKey(themeProvider.isDark),
+                                size: 20,
+                                color: themeProvider.isDark ? const Color(0xFFFFD166) : Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -523,6 +589,33 @@ class _AppBarTitle extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+              ),
+
+              Consumer<ProviderListener>(
+                builder: (context, themeProvider, _) {
+                  return GestureDetector(
+                    onTap: themeProvider.toggle,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: themeProvider.isDark ? const Color(0xFF252837) : const Color(0xFFF2F2F7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                        child: Icon(
+                          themeProvider.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                          key: ValueKey(themeProvider.isDark),
+                          size: 20,
+                          color: themeProvider.isDark ? const Color(0xFFFFD166) : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
