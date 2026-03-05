@@ -7,8 +7,7 @@ import 'package:pos_menu/API/ApiExtension.dart';
 import 'package:pos_menu/Infrastructor/providerListener.dart';
 import 'package:pos_menu/controller/ShopLocationProvider.dart';
 import 'package:pos_menu/controller/category_provider.dart';
-import 'package:pos_menu/controller/menu_provider.dart';
-import 'package:pos_menu/controller/sale_provider.dart';
+import 'package:pos_menu/controller/item_provider.dart';
 import 'package:pos_menu/view/bloked/AdminSetLocationPage%20.dart';
 import 'package:pos_menu/view/home_page/home_page.dart';
 import 'package:provider/provider.dart';
@@ -55,17 +54,6 @@ class _MyAppState extends State<MyApp> {
 
             return HomePage(dbCode: dbCode, tableCode: tableCode);
           },
-          // routes: [
-          //   GoRoute(
-          //     path: 'order_cart',
-          //     builder: (context, state) {
-          //       final dbCode = state.pathParameters['dbCode']!;
-          //       final tableCode = state.uri.queryParameters['table'];
-
-          //       return OrderCart(dbCode: dbCode, table_code: tableCode ?? "");
-          //     },
-          //   ),
-          // ],
         ),
       ],
     );
@@ -75,12 +63,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => MenuProvider(), lazy: true),
+        ChangeNotifierProvider(create: (_) => ItemProvider(), lazy: true),
         ChangeNotifierProvider(create: (_) => CategoryProvider(), lazy: true),
         ChangeNotifierProvider(create: (_) => ApiExtension(), lazy: true),
         ChangeNotifierProvider(create: (_) => ProviderListener(), lazy: true),
-        ChangeNotifierProvider(create: (_) => SaleProvider(), lazy: true),
-        ChangeNotifierProvider(create: (_) => ShopLocationProvider(), lazy: true), // ← Add this
+        ChangeNotifierProvider(create: (_) => ShopLocationProvider(), lazy: true),
       ],
       child: ScreenUtilInit(
         child: MaterialApp.router(

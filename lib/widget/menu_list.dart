@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:pos_menu/API/domainame.dart';
 import 'package:pos_menu/model/menu/menu_model.dart';
+import 'package:pos_menu/widget/item_detailPage.dart';
 
 class MenuList extends StatefulWidget {
   final MenuModel item;
@@ -15,9 +15,7 @@ class MenuList extends StatefulWidget {
 }
 
 class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin {
-  final TextEditingController _quantityController = TextEditingController(text: '1');
   bool _isHovered = false;
-  final bool _isAdding = false;
   bool _isVisible = false;
 
   late AnimationController _controller;
@@ -25,40 +23,27 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  final GlobalKey _itemKey = GlobalKey();
-
   @override
   void initState() {
     super.initState();
-    initializeAnimations();
-
-    // Start animation immediately for visible items
+    _initAnimations();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_isVisible) {
-        _triggerAnimation();
-      }
+      if (mounted && !_isVisible) _triggerAnimation();
     });
   }
 
-  void initializeAnimations() {
-    _controller = AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
-
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-
+  void _initAnimations() {
+    _controller = AnimationController(duration: const Duration(milliseconds: 450), vsync: this);
+    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
+      begin: const Offset(0, 0.15),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
   }
 
   void _triggerAnimation() {
-    if (_isVisible) return;
-
-    // Stagger animation based on index
-    final delay = Duration(milliseconds: (widget.index % 10) * 40);
-
+    final delay = Duration(milliseconds: (widget.index % 12) * 35);
     Future.delayed(delay, () {
       if (mounted && !_isVisible) {
         setState(() => _isVisible = true);
@@ -73,6 +58,12 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
+  void _openDetail() {
+    ItemDetailDialog.show(context, item: widget.item);
+  }
+
+  String get _imageUrl => '${Domain.baseUrl}/${widget.item.itemImg ?? ''}';
+
   @override
   Widget build(BuildContext context) {
     return FadeTransition(
@@ -82,171 +73,130 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
         child: ScaleTransition(
           scale: _scaleAnimation,
           child: MouseRegion(
-            onEnter: (_) {
-              if (mounted) setState(() => _isHovered = true);
-            },
-            onExit: (_) {
-              if (mounted) setState(() => _isHovered = false);
-            },
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
-              onTap: null, //  create new class for view detail item
-              onLongPress: () {},
+              onTap: _openDetail,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
-                transform: Matrix4.identity()..translate(0.0, _isHovered ? -6.0 : 0.0, 0.0),
+                transform: Matrix4.identity()..translate(0.0, _isHovered ? -5.0 : 0.0, 0.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(_isHovered ? 0.12 : 0.04),
-                      blurRadius: _isHovered ? 16 : 8,
-                      offset: Offset(0, _isHovered ? 6 : 2),
+                      color: Colors.black.withOpacity(_isHovered ? 0.10 : 0.05),
+                      blurRadius: _isHovered ? 20 : 10,
+                      offset: Offset(0, _isHovered ? 8 : 3),
                     ),
                   ],
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image Section
-                    Expanded(
-                      flex: 3,
-                      child: Stack(
-                        children: [
-                          // Main Image with RepaintBoundary
-                          RepaintBoundary(
-                            child: ClipRRect(
-                              key: _itemKey,
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                              child: Container(
-                                width: double.infinity,
-                                color: Colors.grey.shade200,
-                                child: _OptimizedImageWidget(imageUrl: '${Domain.baseUrl}/${widget.item.itemImg.toString()}', isHovered: _isHovered),
-                              ),
-                            ),
-                          ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Image Section ──
+                      Expanded(
+                        flex: 55,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _ItemImage(imageUrl: _imageUrl, isHovered: _isHovered),
 
-                          // Hover Gradient Overlay
-                          if (_isHovered)
-                            Positioned.fill(
+                            // Gradient fade at bottom of image
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
                               child: Container(
+                                height: 40,
                                 decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                                   gradient: LinearGradient(
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
-                                    colors: [Colors.transparent, Colors.black.withOpacity(0.08)],
+                                    colors: [Colors.transparent, Colors.black.withOpacity(0.18)],
                                   ),
                                 ),
                               ),
                             ),
 
-                          // Adding State Overlay with Check Icon
-                          if (_isAdding)
-                            Positioned.fill(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                                  color: Colors.black.withOpacity(0.15),
-                                ),
-                                child: Center(
-                                  child: TweenAnimationBuilder<double>(
-                                    tween: Tween(begin: 0.0, end: 1.0),
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeOutBack,
-                                    builder: (context, value, child) {
-                                      return Transform.scale(
-                                        scale: value,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            shape: BoxShape.circle,
-                                            boxShadow: [BoxShadow(color: Colors.green.withOpacity(0.25), blurRadius: 10, spreadRadius: 1)],
-                                          ),
-                                          child: const Icon(Icons.check_rounded, color: Colors.green, size: 24),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                    // Details Section
-                    Expanded(
-                      flex: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Item Description
-                            Expanded(
-                              child: Text(
-                                widget.item.itemDesc ?? '',
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.2, color: Color(0xFF2D3142)),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            // Price and Cart Button Row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Price Badge
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: EdgeInsets.symmetric(horizontal: _isHovered ? 14 : 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.pink,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: _isHovered
-                                        ? [BoxShadow(color: Colors.pink.withOpacity(0.35), blurRadius: 8, offset: const Offset(0, 3))]
-                                        : [],
-                                  ),
+                            // Category Badge
+                            if ((widget.item.catDescEn ?? '').isNotEmpty)
+                              Positioned(
+                                top: 10,
+                                left: 10,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(color: Colors.black.withOpacity(0.55), borderRadius: BorderRadius.circular(20)),
                                   child: Text(
-                                    '\$${widget.item.itemPrice?.toStringAsFixed(2) ?? '0.00'}',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                    widget.item.catDescEn ?? '',
+                                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w600, letterSpacing: 0.3),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-
-                                // Add to Cart Button
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  curve: Curves.easeOutCubic,
-                                  width: (_isHovered || _isAdding) ? 34 : 36,
-                                  height: (_isHovered || _isAdding) ? 34 : 36,
-                                  decoration: BoxDecoration(
-                                    color: _isAdding
-                                        ? Colors.green.withOpacity(0.15)
-                                        : _isHovered
-                                        ? Colors.pink.withOpacity(0.15)
-                                        : Colors.pink.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    _isAdding ? Icons.check_rounded : Icons.add_shopping_cart_rounded,
-                                    size: 18,
-                                    color: _isAdding ? Colors.green : Colors.pink,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
+
+                      // ── Details Section ──
+                      Expanded(
+                        flex: 45,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Name
+                              Expanded(
+                                child: Text(
+                                  widget.item.itemDesc ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.3,
+                                    color: Color(0xFF1A1D2E),
+                                    letterSpacing: -0.2,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              // Price + Cart Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Price
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '\$${widget.item.itemPrice1?.toStringAsFixed(2) ?? '0.00'}',
+                                        style: const TextStyle(
+                                          color: Color(0xFFE8316A),
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 15,
+                                          letterSpacing: -0.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -257,68 +207,76 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
   }
 }
 
-// OPTIMIZED: Separated image widget with caching
-class _OptimizedImageWidget extends StatelessWidget {
+class _ItemImage extends StatelessWidget {
   final String imageUrl;
   final bool isHovered;
-
-  const _OptimizedImageWidget({required this.imageUrl, required this.isHovered});
+  const _ItemImage({required this.imageUrl, required this.isHovered});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedScale(
-      scale: isHovered ? 1.08 : 1.0,
-      duration: const Duration(milliseconds: 300),
+      scale: isHovered ? 1.06 : 1.0,
+      duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutCubic,
       child: Image.network(
         imageUrl,
         fit: BoxFit.cover,
-        // Performance optimizations
-        cacheWidth: 500,
-        cacheHeight: 400,
-        // Smooth loading
-        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        cacheWidth: 600,
+        cacheHeight: 500,
+        frameBuilder: (_, child, frame, wasSynchronouslyLoaded) {
           if (wasSynchronouslyLoaded) return child;
-
-          return AnimatedOpacity(opacity: frame == null ? 0 : 1, duration: const Duration(milliseconds: 200), curve: Curves.easeOut, child: child);
+          return AnimatedOpacity(opacity: frame == null ? 0.0 : 1.0, duration: const Duration(milliseconds: 250), child: child);
         },
-        // Error handling
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey.shade100,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.restaurant_menu_rounded, size: 40, color: Colors.grey.shade400),
-                  const SizedBox(height: 4),
-                  Text('Image not available', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
-                ],
-              ),
-            ),
+        loadingBuilder: (_, child, progress) {
+          if (progress == null) return child;
+          return _ImagePlaceholder(
+            progress: progress.expectedTotalBytes != null ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes! : null,
           );
         },
-        // Loading indicator
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
+        errorBuilder: (_, __, ___) => const _ImageError(),
+      ),
+    );
+  }
+}
 
-          return Container(
-            color: Colors.grey.shade100,
-            child: Center(
-              child: SizedBox(
-                width: 30,
-                height: 30,
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                      : null,
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.pink.shade300),
-                ),
-              ),
+class _ImagePlaceholder extends StatelessWidget {
+  final double? progress;
+  const _ImagePlaceholder({this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFF5F5F7),
+      child: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(value: progress, strokeWidth: 2.5, color: const Color(0xFFE8316A)),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageError extends StatelessWidget {
+  const _ImageError();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFFF5F5F7),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.restaurant_rounded, size: 36, color: Colors.grey.shade300),
+            const SizedBox(height: 6),
+            Text(
+              'No Image',
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade400, fontWeight: FontWeight.w500),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }

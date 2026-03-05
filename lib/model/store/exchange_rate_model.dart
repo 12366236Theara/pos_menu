@@ -1,26 +1,17 @@
 import 'dart:convert';
 
 class ExchangeRate {
-  final String? vatIn;
-  final String? vatOut;
-  final String? exchangeRate;
-  final String? exchangeRateDisplay;
+  String? code;
+  String? siData;
 
-  const ExchangeRate({this.vatIn, this.vatOut, this.exchangeRate, this.exchangeRateDisplay});
+  ExchangeRate({this.code, this.siData});
 
   @override
-  String toString() {
-    return 'ExchangeRate(vatIn: $vatIn, vatOut: $vatOut, exchangeRate: $exchangeRate)';
-  }
+  String toString() => 'ExchangeRate(code: $code, siData: $siData)';
 
-  factory ExchangeRate.fromMap(Map<String, dynamic> data) => ExchangeRate(
-    vatIn: data['VAT_IN'] as String?,
-    vatOut: data['VAT_OUT'] as String?,
-    exchangeRate: data['EXCHANGE_RATE'] as String?,
-    exchangeRateDisplay: data['EXCHANGE_RATE_DISPLAY'] as String?,
-  );
+  factory ExchangeRate.fromMap(Map<String, dynamic> data) => ExchangeRate(code: data['CODE'] as String?, siData: data['SI_DATA'] as String?);
 
-  Map<String, dynamic> toMap() => {'VAT_IN': vatIn, 'VAT_OUT': vatOut, 'EXCHANGE_RATE': exchangeRate, 'EXCHANGE_RATE_DISPLAY': exchangeRateDisplay};
+  Map<String, dynamic> toMap() => {'CODE': code, 'SI_DATA': siData};
 
   /// `dart:convert`
   ///
@@ -33,4 +24,8 @@ class ExchangeRate {
   ///
   /// Converts [ExchangeRate] to a JSON string.
   String toJson() => json.encode(toMap());
+
+  ExchangeRate copyWith({String? code, String? siData}) {
+    return ExchangeRate(code: code ?? this.code, siData: siData ?? this.siData);
+  }
 }

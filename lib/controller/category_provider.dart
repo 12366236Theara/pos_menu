@@ -47,11 +47,15 @@ class CategoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> getCategory(BuildContext context, {String searchQry = "", String categoryType = "M", int status = 1}) async {
+  Future<bool> getCategory(BuildContext context, {String searchQry = "", String categoryType = "M", int status = 1, String? dbcode}) async {
     try {
       String url = Domain.baseUrl + Domain.GET_ALL_CATEGORIES;
       var response = await dio
-          .get(url, options: dioOptions, queryParameters: {"searchQry": searchQry, "status": status, "type": categoryType, 'dbcode': _dbCode})
+          .get(
+            url,
+            options: dioOptions,
+            queryParameters: {"searchQry": searchQry, "status": status, "type": categoryType, 'dbcode': dbcode ?? _dbCode},
+          )
           .catchError((err) => {ModernPopupDialog.showPopup(context, "msg.មិនអាចភ្ជាប់ទៅកាន់ប្រព័ន្ធបានទេ".tr(), layerContext: 2, success: 0)});
       if (response.statusCode == 200) {
         categories = CategoryModel.fromJsonList((response.data)['data']);

@@ -1,69 +1,49 @@
 // ignore_for_file: constant_identifier_names
 // https://
 class Domain {
-  // static String domainName = "192.168.1.103"; // for test on IOS simulator
-  // static String domainName = "51.79.251.248";
-  // static String domainName = "136.228.128.138";
+  // ---- for subdomain ---- //
+  // static String domainName = "https://pos.tonairedigital.net";
+  // static String domainSocket = "https://possoc.tonairedigital.net";
+  // static String domain = domainName;
+  // static String domainImageSmall = "$domainName/api/v2/imageresize?url=";
+  // static String baseUrl = domainName;
+  // // Webhook
+  // static String subscriptionWebhookUrl = "$domainName/api/v1/subscriptions/renewSubhook";
+  // static String registerWebhookUrl = "$domainName/api/v1/store/registerHook";
 
-  // PROD
-  // static String domainName = "51.79.251.248";
-  // static String port = "12010";
-  // static String portSocket = "12012";
-  // static String jsReport = "12011";
+  // -- for Testing dev-- //
+  // static String domainName = "203.189.135.191";
+  // static String port = "10010";
+  // static String portSocket = "10012";
+  // static String jsReport = "10011";
 
-  //local dev
+  // -- for Testing dev-- //
+  // static String domainName = "192.168.1.210";
+  // static String port = "10010";
+  // static String portSocket = "10012";
+  // static String jsReport = "10011";
+
+  // -- for local testing -- //
   static String domainName = "192.168.1.137";
   static String port = "3000";
   static String portSocket = "3002";
   static String jsReport = "3001";
-
-  // static String domainName = "192.168.1.210";
-  // static String port = "13010";
-  // static String portSocket = "13012";
-  // static String jsReport = "13011";
-
-  // DEV URL
-  // static String domainName = "192.168.1.177";
-  // static String port = "10010";
-  // static String portSocket = "10012";
-  // static String jsReport = "10011";
+  // static String imageDomain = "http://51.79.251.248:3000";
 
   static String domain = "http://$domainName:$port";
   static String domainSocket = "http://$domainName:$portSocket";
   static String domainImageSmall = "http://$domainName:$port/api/v2/imageresize?url=";
   static String baseUrl = "http://$domainName:$port";
+  static String invoiceBaseURl = 'http://$domainName:$jsReport';
 
-  //   PRODUCTION :
-  // Subdomain : mbrest.tonairedigital.net
-  // IP 51.79.251.248:12010
-  // SOCKET : 51.79.251.248:12012
-
-  // DEV : mbrestdev.tonairedigital.net
-  // Subdomain : mbrestdev.toaniredigital.net
-  // IP :136.228.128.138:12010
-  // SOCKET : 136.228.128.138:12012
-
-  // Sub Domain DEV
-  // static String domain = "https://mbrestdev.tonairedigital.net";
-  // static String domainSocket = "https://mbrestdevsocket.tonairedigital.net";
-  // static String baseUrl = domain;
-
-  // Sub Domain Production
-  // static String domain = "https://mbrest.tonairedigital.net";
-  // static String domainSocket = "https://mbrestsocket.tonairedigital.net";
-  // static String baseUrl = domain;
+  static String subscriptionWebhookUrl = "http://$domainName:$port/api/v1/subscriptions/renewSubhook";
+  static String registerWebhookUrl = "http://$domainName:$port/api/v1/store/registerHook";
 
   static const String REGISTER_URL = "";
   static const String USER_PROFILE = "";
   static const String TOKEN = "";
   static const String USER_PASSWORD = "";
   static const String USER_NUMBER = "";
-
-  // Webhook
-  // static String subscriptionWebhookUrl = "$domain/api/v1/subscriptions/renewSubhook";
-  // static String registerWebhookUrl = "$domain/api/v1/store/registerHook";
-  // static String subscriptionWebhookUrl =
-  //     "http://136.228.128.138:5090/api/AbaWebHook/ModernBusiness";
 
   // Authentication Routes
   static const String GET_APP_VERSION = "/api/v1/authentication/appversion";
@@ -92,6 +72,7 @@ class Domain {
   static const String REGISTER_STORE = "/api/v1/store/register";
   static const String PRE_REGISTER = "/api/v1/store/pre-register";
   static const String REMOVE_PREREGISTER = '/api/v1/store/remove';
+  static const String REGISTER_STORE_FROMADMIN = "/api/v1/store/register/from_admin";
 
   static const String GET_SUBSCRIPTION_DETAIL = "/api/v1/subscriptions/history";
   static const String GET_ALL_SUBHISTORY = "/api/v1/subscriptions/allHistory";
@@ -101,33 +82,25 @@ class Domain {
   static const String ENABLE_DEVICE = '/api/v1/subscriptions/device/enable';
   static const String CHECK_DEVICE_STAT = '/api/v1/subscriptions/device/status';
   static const String TRANSACTION_PREFIX = '/api/v1/subscriptions/prefix';
-  static const String REGISTER_STORE_FROMADMIN = "/api/v1/store/register/from_admin";
 
   // Item
   static const String CREATE_PRODUCT = "/api/v1/item";
+  static const String CREATE_PRODUCT_V2 = "/api/v1/item/v2";
   static const String GET_ALL_PRODUCTS = "/api/v1/item";
   static const String GET_ALL_ITEM_IN_DETAIL = "/api/v1/item/detail";
   static const String GET_ALL_ITEM_WITHPAGINATION = "/api/v1/item/pagination";
+  static const String GET_ALL_ITEM_WITHPAGINATION_V2 = "/api/v1/item/public_menu";
   static const String GET_EACH_ITEM_DETAIL = "/api/v1/item/item_detail";
+  static const String GET_EACH_ITEM_DETAIL_V2 = "/api/v1/item/item_detail/v2";
   static const String UPDATE_PRODUCT = '/api/v1/item/update';
+  static const String UPDATE_PRODUCT_V2 = '/api/v1/item/update/v2';
   static const String CHECK_ITEM_CODE = '/api/v1/item/checkExistItem';
   static const String CHECK_ITEM_BARCODE = '/api/v1/item/checkExistItemBarcode';
   static const String DISABLE_ITEM = '/api/v1/item/disable';
   static const String ENABLE_ITEM = '/api/v1/item/enable';
-  static const String GET_ALL_INGREDIENT = '/api/v1/item/all_ingredient';
-  static const String GET_ALL_GP_OPTION = '/api/v1/group_option';
+  static const String GET_ONLY_ITEM = '/api/v1/item/item-only';
 
   static const String GET_NEXT_ITEM_CODE = '/api/v1/item/next_item_code';
-
-  // Menu
-  static const String GET_ALL_MENU = '/api/v1/menu/public_menu';
-  static const String GET_DETAIL_MENU = '/api/v1/menu/detail';
-  static const String GET_ALL_MENU_STOCK = '/api/v1/menu/stock';
-  static const String DELETE_MENU = '/api/v1/menu/delete';
-  static const String CREATE_MENU = '/api/v1/menu';
-  static const String UPDATE_MENU = '/api/v1/menu';
-  static const String CHECKMENUEXIST = "/api/v1/menu/checkmMenuExist";
-  static const String ENABLE_MENU = '/api/v1/menu/enable';
 
   // Delivery Address
   static const String GET_DELIVERY_ADDRESS = '/api/v1/delivery_address';
@@ -142,12 +115,14 @@ class Domain {
   static const String CREATE_SUPPLIER = "/api/v1/supplier";
   static const String GET_ALL_SUPPLIERS = "/api/v1/supplier";
   static const String GET_ALL_CUSTOMERS = '/api/v1/supplier/customer';
+  static const String GET_ALL_CUSTOMER_WITH_PAGINATION = '/api/v1/supplier/customer/paginate';
   static const String CREATE_CUSTOMERS = '/api/v1/supplier/customer';
   static const String GET_WAREHOUSE_BY_SUPPCODE = '/api/v1/supplier/warehouse';
   static const String GET_SUPPLIER_ITEM = '/api/v1/supplier/item';
   static const String GET_SUPPLIER_ITEM_V2 = '/api/v1/supplier/itemV2';
   static const String ENABLE_SUPPLIER = '/api/v1/supplier/enable';
   static const String ENABLE_CUSTOMER = '/api/v1/supplier/enableCustomer';
+  static const String DOWNLOAD_REPORT_CUSTOMER = '/api/v1/supplier/customer/report';
 
   static const String UPDATE_SUPPLIER = '/api/v1/supplier';
   static const String UPDATE_CUSTOMER = '/api/v1/supplier/customer';
@@ -157,7 +132,7 @@ class Domain {
 
   // Category
   static const String GET_ALL_BRAND = "/api/v1/category";
-  static const String GET_ALL_CATEGORIES = "/api/v1/category/category";
+  static const String GET_ALL_CATEGORIES = "/api/v1/category/category_detail_menu";
   static const String CREATE_BRAND = "/api/v1/category";
   static const String CREATE_CATEGORY = "/api/v1/category/category_detail";
   static const String UPDATE_CATEGORY = '/api/v1/category/category_detail';
@@ -165,44 +140,105 @@ class Domain {
   static const String GET_CATEGORY_BY_BRAND = '/api/v1/category/category_detail/brand';
   static const String ENABLE_CATEGORY = '/api/v1/category/category_detail/enable';
 
+  // Warehouse
+  static const String GET_ALL_WAREHOUSE = '/api/v1/warehouse';
+  static const String CREATE_WAREHOUSE = '/api/v1/warehouse';
+  static const String DELETE_WAREHOUSE = '/api/v1/warehouse';
+  static const String UPDATE_WAREHOUSE = '/api/v1/warehouse';
+  static const String TRANSFER_TO_WAREHOUSE = '/api/v1/warehouse/localtransfer';
+  static const String ENABLE_WAREHOUSE = '/api/v1/warehouse/enable';
+
+  // Purchase Order
+  static const String GET_ALL_PO = '/api/v1/purchase_order';
+  static const String GET_ALL_PO_PAGINATE = '/api/v1/purchase_order/paginate';
+  static const String CREATE_PO = '/api/v1/purchase_order';
+  static const String GET_ALL_PO_PRESET = '/api/v1/purchase_order_preset';
+  static const String CREATE_PO_PRESET = '/api/v1/purchase_order_preset';
+  static const String DELETE_PO_PRESET = '/api/v1/purchase_order/preset';
+  static const String DISABLE_PO = '/api/v1/purchase_order/disable';
+  static const String ADJUST_STOCK = '/api/v1/purchase_order/adjustStock';
+
+  // Receive PO
+  static const String RECEIVE_PO = '/api/v1/purchase_order/receive_po';
+
   // Inventory
   static const String GET_ALL_INVENTORY = '/api/v1/inventory';
-  static const String GET_REPORT_INVENTORY = '/api/v1/inventory/report_inventory';
-  static const String GET_REPORT_OUTOFSTOCK = '/api/v1/inventory/outofstock_report';
 
   // Sales Order
-  static const String POST_SALES = '/api/v1/sale';
-  static const String CREATE_ORDER = '/api/v1/sale/order_menu_qr';
-
+  static const String CREATE_SALES_ORDER = '/api/v1/sale';
+  static const String CREATE_SALES_ORDER_V2 = '/api/v1/sale/v2';
+  static const String GET_SALE_REPORT = '/api/v1/sale/report';
+  static const String GET_SALE_HISTORY = '/api/v1/sale/history';
   static const String SEARCH_SALE = '/api/v1/sale/search';
-
+  static const String GET_SALE_DETAIL = '/api/v1/sale/detail';
+  static const String GET_SALE_DETAIL_V2 = '/api/v1/sale/detail/v2';
+  static const String POST_CREDIT_NOTE = '/api/v1/sale/creditnote';
+  static const String CALCULATE_PROFIT = '/api/v1/sale/calculate_profit';
   static const String GET_EXCHANGE_RATE = '/api/v1/sale/exchange_rate';
   static const String CHECK_ITEM_STOCK = '/api/v1/item/check_stock';
-  static const String GET_SALE_ORDER = '/api/v1/sale/table_order_qr';
-  static const String UPDATE_SALE_ORDER_QR = '/api/v1/sale/update_menu_qr';
-  static const String UPDATA_TALBE_ORDER_ORDER_QR = '/api/v1/sale/update_table_order_qr';
+  static const String GET_SALE_INVOICE_A4 = '/api/v1/sale/invoice';
+  static const String GET_CLOSE_SHIFT_REPORT = '/api/v1/sale/close_shift_report';
+  static const String GET_CLOSE_SHIFT_REPORT_DETAIL = '/api/v1/sale/close_shift_detail_report';
+
+  // Report
+  static const String REPORT = '/api/v1/report';
+  static const String GENERATE_REPORT = '/api/v1/report/generate_report';
+  static const String GENERATE_SALE_INVOICE_REPORT = '/api/v1/report/sale_invoice';
+  static const String GET_SALE_INVOICE_REPORT_DATA = '/api/v1/report/sale_invoice_data';
+  static const String GET_PO_REPORT = '/api/v1/report/po_report';
+
+  static const String TOP_SALE_ITEM = '/api/v1/report/top_sale_item';
+  static const String STOCK_REPORT = '/api/v1/report/stock_report';
+  static const String SUMMARY_REPORT = '/api/v1/report/summary_report';
+  static const String SUMMARY_REPORT_DATA = '/api/v1/report/summary_report_data';
+
+  // Permission
+  static const String GET_ALL_GROUP_PERMISSION = '/api/v1/permission/group';
+  static const String CREATE_GROUP_PERMISSION = '/api/v1/permission/group/create';
+
+  static const String GET_GROUP_PERMISSION_BY_USER = '/api/v1/permission/group/user';
+  static const String GET_PERMISSION_BY_USER = '/api/v1/permission/user';
+  static const String UPDATE_USER_PERMISSION = '/api/v1/permission/user';
+  static const String UPDATE_GROUP_PERMISSION = '/api/v1/permission/group';
+  static const String DELETE_GROUP_PERMISSION = '/api/v1/permission/group';
+
+  static const String LIST_PERMISSION_BY_GROUP = '/api/v1/permission/group/listPermission';
+  static const String LIST_USER_BY_GROUP = '/api/v1/permission/group/users';
 
   // Shop
-  static const String GET_SHOP_INFO = '/api/v1/store/config';
+  static const String GET_SHOP_INFO = '/api/v1/store/info';
+  static const String GET_SHOP_INFO_V2 = '/api/v1/store/infoV2Menu';
   static const String UPDATE_SHOP_EXCHANGE_RATE = '/api/v1/store/info/exchange';
   static const String UPDATE_SHOP_INFO = '/api/v1/store/info';
-  static const String UPDATE_DEVICE = '/api/v1/store/disabledevice';
+  static const String UPDATE_SHOP_INFO_V2 = '/api/v1/store/infoV2';
 
-  // Table
-  static const String GET_ALL_TABLE = "/api/v1/table/get";
-  static const String GET_TABLE_DETAIL = "/api/v1/table/detail";
+  // Expense
+  static const String GET_ALL_EXPENSE = "/api/v1/expense";
+  static const String CREATE_EXPENSE = "/api/v1/expense/create";
+  static const String UPDATE_EXPENSE = '/api/v1/expense/update';
+  static const String DELETE_EXPENSE = '/api/v1/expense/delete';
 
-  // IMAGE RESIZE
-  static const String IMAGE_RESIZE = "/api/v1/imageresize?url=";
+  // Image Resize
+  static const String IMAGE_RESIZE = '/api/v1/image_resize';
 
-  //ROOM
-  static const String GET_ALL_ROOM = "/api/v1/room/get";
+  // Dashboard Image
+  static const String DASHBOARD_IMAGE = '/api/v1/dashboardimage';
 
-  // Menu QRCODE
-  static const String MENU_QR_CODE = '/menu_qrcode';
-  static const String UPDATE_STYLE_MENU = '/api/v1/store/menuConfig';
-  static const String GET_STYLE_MENU = '/api/v1/store/menuConfig';
+  // Bank
+  static const String GETALLBANK = '/api/v1/bank/getAllBank';
+  static const String CREATEBANK = '/api/v1/bank/create';
+  static const String UPDATEBANK = '/api/v1/bank/update';
+  static const String DISABLEBANK = '/api/v1/bank/disable';
+  static const String ENABLEBANK = '/api/v1/bank/enable';
 
+  // Member Ship
+  static const String GETALL_MEMBERSHIP = '/api/v1/bank/getAllBank';
+  static const String CREATE_MEMBERSHIP = '/api/v1/bank/create';
+  static const String UPDATE_MEMBERSHIP = '/api/v1/bank/update';
+  static const String DELETE_MEMBERSHIP = '/api/v1/bank/disable';
+  static const String ENABLE_MEMBERSHIP = '/api/v1/bank/enable';
+
+  // currency
   static const String CREATE_CURRENCY = '/api/v1/currency';
   static const String UPDATE_CURRENCY = '/api/v1/currency/update';
 }

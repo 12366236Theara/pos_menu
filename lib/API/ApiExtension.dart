@@ -7,12 +7,14 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pos_menu/API/domainame.dart';
+import 'package:pos_menu/Currency/model/currency_mode.dart';
 import 'package:pos_menu/Infrastructor/modernAnimateLoading.dart';
 import 'package:pos_menu/Infrastructor/modernPopupDialog.dart';
 import 'package:pos_menu/Infrastructor/singleton.dart';
-import 'package:pos_menu/model/store/exchange_rate_model.dart';
 import 'package:pos_menu/model/store/store_model.dart';
 import 'package:pos_menu/model/user/user_model.dart';
+
+import '../model/ExchangeRate/exchange_rate.dart';
 
 class ApiExtension with ChangeNotifier {
   ApiExtension({BuildContext? context});
@@ -21,7 +23,7 @@ class ApiExtension with ChangeNotifier {
 
   var dio = Singleton.instance.dio;
   final String dbCode = Singleton.instance.getDbCode() ?? '';
-  ShopData? shopData;
+  StoreModel? shopData;
   StoreModel? shopInfo;
   Options dioOptions = Options(
     receiveDataWhenStatusError: true,
@@ -106,13 +108,14 @@ class ApiExtension with ChangeNotifier {
   //   }
   // }
 
-  Future<bool> getShopInfo() async {
+  Future<bool> getShopInfo(String dbCode) async {
     try {
-      String url = Domain.baseUrl + Domain.GET_SHOP_INFO;
-      var res = await dio.get(url, options: dioOptions);
+      String url = Domain.baseUrl + Domain.GET_SHOP_INFO_V2;
+      var res = await dio.get(url, options: dioOptions, queryParameters: {'dbcode': dbCode});
 
       if (res.statusCode == 200) {
         Singleton.instance.shopInfo = StoreModel.fromMap(res.data['data']);
+        shopData = StoreModel.fromMap(res.data['data']);
         log("GET SHOP INFO : ${Singleton.instance.shopInfo?.toJson()}");
 
         ///base

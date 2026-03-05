@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:pos_menu/model/store/exchange_rate_model.dart';
+import 'package:pos_menu/model/store/invoice_setting_model.dart';
 import 'package:pos_menu/model/store/vat_mode.dart';
 
 class StoreModel {
@@ -22,11 +23,12 @@ class StoreModel {
   List<Vat>? vat;
   List<ExchangeRate>? exchangeRate;
   // List<QueueModel>? queue;
-  // InvoiceSettingModel? invoiceSetting;
+  InvoiceSettingModel? invoiceSetting;
   String? defaultCurrency;
   String? qr_imagPath;
   String? qr_inv_1;
   String? qr_inv_2;
+  String? logoShop;
 
   StoreModel({
     this.dbCode,
@@ -52,6 +54,7 @@ class StoreModel {
     this.qr_inv_2,
     this.qr_imagPath,
     this.defaultCurrency,
+    this.logoShop,
   });
 
   @override
@@ -83,6 +86,7 @@ class StoreModel {
     // invoiceSetting: data['INVOICE_SETTING'] != null ? InvoiceSettingModel.fromJson(data['INVOICE_SETTING'] as Map<String, dynamic>) : null,
     defaultCurrency: data['CURRENCY'] as String?,
     qr_imagPath: (data['QR_IMAGE']),
+    logoShop: data['logoShop'],
   );
 
   Map<String, dynamic> toMap() => {
