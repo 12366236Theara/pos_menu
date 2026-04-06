@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pos_menu/Extension/appColorsExtension.dart';
@@ -317,7 +318,7 @@ class _HomePageState extends State<HomePage> {
                               final item = items[index];
                               return RepaintBoundary(
                                 key: ValueKey('menu-item-${item.itemCode}'),
-                                child: MenuList(item: item, index: index, cartIconKey: _activeCartKey),
+                                child: MenuList(item: item, index: index, cartIconKey: _activeCartKey , itemCurr: item.itemCurreny,),
                               );
                             }, childCount: items.length),
                           );
@@ -381,7 +382,7 @@ class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
-          Search(hint: 'Search menu...', controller: controller),
+          Search(hint: 'txt.ស្វែងរក (ឈ្មោះ, លេខកូដ)'.tr(), controller: controller),
           Expanded(
             child: Category(categories: categories, selectedCategory: selectedCategory, isScrolled: scrolled, onSelected: onSelected),
           ),

@@ -2,15 +2,13 @@
 // https://
 class Domain {
   // ---- for subdomain ---- //
-  // static String domainName = "https://pos.tonairedigital.net";
-  // static String domainSocket = "https://possoc.tonairedigital.net";
-  // static String domain = domainName;
-  // static String domainImageSmall = "$domainName/api/v2/imageresize?url=";
-  // static String baseUrl = domainName;
-  // // Webhook
-  // static String subscriptionWebhookUrl = "$domainName/api/v1/subscriptions/renewSubhook";
-  // static String registerWebhookUrl = "$domainName/api/v1/store/registerHook";
+  static String domainName = "https://pos.tonairedigital.net";
+  static String domainSocket = "https://possoc.tonairedigital.net";
+  static String domain = domainName;
+  static String domainImageSmall = "$domainName/api/v2/imageresize?url=";
+  static String baseUrl = domainName;
 
+  
   // -- for Testing dev-- //
   // static String domainName = "203.189.135.191";
   // static String port = "10010";
@@ -24,26 +22,18 @@ class Domain {
   // static String jsReport = "10011";
 
   // -- for local testing -- //
-  static String domainName = "192.168.1.137";
-  static String port = "3000";
-  static String portSocket = "3002";
-  static String jsReport = "3001";
+  // static String domainName = "192.168.1.137";
+  // static String port = "3000";
+  // static String portSocket = "3002";
+  // static String jsReport = "3001";
   // static String imageDomain = "http://51.79.251.248:3000";
 
-  static String domain = "http://$domainName:$port";
-  static String domainSocket = "http://$domainName:$portSocket";
-  static String domainImageSmall = "http://$domainName:$port/api/v2/imageresize?url=";
-  static String baseUrl = "http://$domainName:$port";
-  static String invoiceBaseURl = 'http://$domainName:$jsReport';
+  // static String domain = "http://$domainName:$port";
+  // static String domainSocket = "http://$domainName:$portSocket";
+  // static String domainImageSmall = "http://$domainName:$port/api/v2/imageresize?url=";
+  // static String baseUrl = "http://$domainName:$port";
+  // static String invoiceBaseURl = 'http://$domainName:$jsReport';
 
-  static String subscriptionWebhookUrl = "http://$domainName:$port/api/v1/subscriptions/renewSubhook";
-  static String registerWebhookUrl = "http://$domainName:$port/api/v1/store/registerHook";
-
-  static const String REGISTER_URL = "";
-  static const String USER_PROFILE = "";
-  static const String TOKEN = "";
-  static const String USER_PASSWORD = "";
-  static const String USER_NUMBER = "";
 
   // Authentication Routes
   static const String GET_APP_VERSION = "/api/v1/authentication/appversion";

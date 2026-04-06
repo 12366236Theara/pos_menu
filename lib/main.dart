@@ -12,6 +12,7 @@ import 'package:pos_menu/controller/item_provider.dart';
 import 'package:pos_menu/view/bloked/AdminSetLocationPage%20.dart';
 import 'package:pos_menu/view/home_page/home_page.dart';
 import 'package:provider/provider.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 void main() async {
@@ -20,7 +21,7 @@ void main() async {
   usePathUrlStrategy();
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('en'), Locale('km')],
+      supportedLocales: const [Locale('en'), Locale('km') ,  Locale('zh')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       child: const MyApp(),

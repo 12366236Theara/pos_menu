@@ -1,6 +1,10 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:pos_menu/API/domainame.dart';
 import 'package:pos_menu/Extension/appColorsExtension.dart';
+import 'package:pos_menu/Extension/dynamic_icon_currency.dart';
+import 'package:pos_menu/Infrastructor/styleColor.dart';
+import 'package:pos_menu/model/menu/item_currency.dart';
 import 'package:pos_menu/model/menu/menu_model.dart';
 import 'package:pos_menu/widget/item_detailPage.dart';
 
@@ -8,8 +12,9 @@ class MenuList extends StatefulWidget {
   final MenuModel item;
   final int index;
   final GlobalKey? cartIconKey;
+  ItemCurr? itemCurr;
 
-  const MenuList({super.key, required this.item, this.index = 0, this.cartIconKey});
+   MenuList({super.key, required this.item, this.index = 0, this.cartIconKey , this.itemCurr});
 
   @override
   State<MenuList> createState() => _MenuListState();
@@ -145,7 +150,7 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
 
                       // ── Details Section ──
                       Expanded(
-                        flex: 45,
+                        flex: 25,
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                           child: Column(
@@ -170,15 +175,17 @@ class _MenuListState extends State<MenuList> with SingleTickerProviderStateMixin
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    '\$${widget.item.itemPrice1?.toStringAsFixed(2) ?? '0.00'}',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15,
-                                      letterSpacing: -0.3,
-                                    ),
-                                  ),
+                                   if(widget.itemCurr != null ) 
+                                       Padding(
+                                          padding:  EdgeInsets.symmetric(horizontal: 5),
+                                          child: Text("${CurrencyExtention.currencyIconSecond(currencyCode: widget.itemCurr?.type)} ${widget.itemCurr?.currValues}",
+                                              style: StyleColor.textStyleKhmerContentAuto(bold: true, color: StyleColor.appBarColor))),
+                                            if(widget.itemCurr == null )  Padding(
+                                          padding:  EdgeInsets.symmetric(horizontal: 5),
+                                          child: CurrencyText(
+                                              price: Decimal.parse(widget.item.itemPrice1.toString()),
+                                              style: StyleColor.textStyleKhmerContentAuto(bold: true, color: StyleColor.appBarColor)),
+                                        ),
                                 ],
                               ),
                             ],
