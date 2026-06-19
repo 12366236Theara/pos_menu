@@ -33,6 +33,11 @@ class Domain {
   // static String domainImageSmall = "http://$domainName:$port/api/v2/imageresize?url=";
   // static String baseUrl = "http://$domainName:$port";
   // static String invoiceBaseURl = 'http://$domainName:$jsReport';
+  // static String domain = "http://$domainName:$port";
+  // static String domainSocket = "http://$domainName:$portSocket";
+  // static String domainImageSmall = "http://$domainName:$port/api/v2/imageresize?url=";
+  // static String baseUrl = "http://$domainName:$port";
+  // static String invoiceBaseURl = 'http://$domainName:$jsReport';
 
 
   // Authentication Routes

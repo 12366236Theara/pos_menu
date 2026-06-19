@@ -41,6 +41,11 @@ class ItemProvider extends ChangeNotifier {
 
   Options dioOptions = Options(receiveDataWhenStatusError: true, followRedirects: false, validateStatus: (s) => true);
 
+  void clearItems() {
+    items = [];
+    notifyListeners();
+  }
+
   Future<List<MenuModel>> getItemWithPagination(
     BuildContext context, {
     String? searchQry,

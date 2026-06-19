@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -35,15 +37,30 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  // ── ValueNotifier replaces setState for app-bar expand/collapse ──────────
+  // Only the widgets that listen to this notifier rebuild — not the whole page.
+  final ValueNotifier<bool> _isExpandedNotifier = ValueNotifier(true);
+
   String selectedCategory = 'All';
   String? selectedCategoryCode;
-  bool _isAppBarExpanded = true;
 
-  // ── Pagination state ──────────────────────────────────────────
+  // ── Pagination state ──────────────────────────────────────────────────────
   bool _isLoadingMore = false;
   bool _hasMorePages = true;
   int _currentPage = 1;
   static const int _pageSize = 20;
+
+  // ── Filtered-item cache — avoids re-filtering on every Consumer rebuild ───
+  // _lastAllItems tracks the source list reference so the cache is
+  // automatically invalidated when the provider replaces its list (e.g.
+  // after an API call) — this is what fixes "All not showing after category switch"
+  List<MenuModel>? _cachedFiltered;
+  List<MenuModel>? _lastAllItems;
+  String? _lastSearch;
+  String? _lastCat;
+
+  // ── Debounce timer for search ─────────────────────────────────────────────
+  Timer? _searchDebounce;
 
   late Future _combineFuture;
 
@@ -62,16 +79,28 @@ class _HomePageState extends State<HomePage> {
     _controller.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _isExpandedNotifier.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
-  void _onSearchChanged() => setState(() {});
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _invalidateFilterCache();
+      _refreshData();
+    });
+  }
+
+  void _invalidateFilterCache() {
+    _cachedFiltered = null;
+    _lastAllItems = null;
+    _lastSearch = null;
+    _lastCat = null;
+  }
 
   void _onScroll() {
-    final newExpanded = _scrollController.offset < 20;
-    if (newExpanded != _isAppBarExpanded) {
-      setState(() => _isAppBarExpanded = newExpanded);
-    }
+    _isExpandedNotifier.value = _scrollController.offset < 20;
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
       _loadNextPage();
     }
@@ -92,19 +121,15 @@ class _HomePageState extends State<HomePage> {
 
     final results = await Future.wait([menuFuture, categoryFuture, storeFuture]);
 
-    // Check pagination meta
-    final provider = Provider.of<ItemProvider>(context, listen: false);
-    final meta = provider.itemPagination;
+    final meta = Provider.of<ItemProvider>(context, listen: false).itemPagination;
     if (meta != null) {
       _hasMorePages = _currentPage < (meta.totalPages ?? 1);
     }
-
     return results;
   }
 
   Future<void> _loadNextPage() async {
     if (_isLoadingMore || !_hasMorePages) return;
-
     setState(() => _isLoadingMore = true);
 
     final provider = Provider.of<ItemProvider>(context, listen: false);
@@ -129,10 +154,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _refreshData() async {
     final provider = Provider.of<ItemProvider>(context, listen: false);
+
     setState(() {
       _currentPage = 1;
       _hasMorePages = true;
     });
+
+    provider.clearItems(); 
+
     await provider.getItemWithPagination(
       context,
       dbcode: widget.dbCode,
@@ -141,27 +170,15 @@ class _HomePageState extends State<HomePage> {
       searchQry: _controller.text.isNotEmpty ? _controller.text : null,
       category: selectedCategoryCode,
     );
+
     final meta = provider.itemPagination;
+
     setState(() {
       _hasMorePages = meta != null ? 1 < (meta.totalPages ?? 1) : false;
     });
   }
 
-  List<MenuModel> _getFilteredItems(List<MenuModel> all) {
-    var list = all;
-    if (selectedCategory != 'All' && selectedCategoryCode != null) {
-      list = list.where((m) => m.catCode?.toString() == selectedCategoryCode).toList();
-    }
-    if (_controller.text.isNotEmpty) {
-      final q = _controller.text.toLowerCase();
-      list = list.where((m) {
-        return (m.itemDesc ?? '').toLowerCase().contains(q) || (m.itemCode ?? '').toLowerCase().contains(q);
-      }).toList();
-    }
-    return list;
-  }
-
-  GlobalKey get _activeCartKey => _isAppBarExpanded ? _cartIconExpandedKey : _cartIconCollapsedKey;
+  GlobalKey get _activeCartKey => _isExpandedNotifier.value ? _cartIconExpandedKey : _cartIconCollapsedKey;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +222,6 @@ class _HomePageState extends State<HomePage> {
               controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // ── App Bar ──
                 Consumer<ApiExtension>(
                   builder: (context, api, _) {
                     final shop = api.shopData;
@@ -236,16 +252,16 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
 
-                // ── Search + Category ──
                 Consumer<CategoryProvider>(
                   builder: (context, catProvider, _) {
                     return SliverPersistentHeader(
                       pinned: true,
                       delegate: _CategoryHeaderDelegate(
                         controller: _controller,
+                        searchText: _controller.text, 
                         categories: catProvider.categories,
                         selectedCategory: selectedCategory,
-                        isScrolled: !_isAppBarExpanded, // turns on compact style after scroll
+                        isScrolled: !_isExpandedNotifier.value,
                         onSelected: (cat, code) {
                           setState(() {
                             selectedCategory = cat;
@@ -253,6 +269,11 @@ class _HomePageState extends State<HomePage> {
                             _currentPage = 1;
                             _hasMorePages = true;
                           });
+
+                          _invalidateFilterCache();
+
+                          Provider.of<ItemProvider>(context, listen: false).clearItems(); // 🔥 ADD THIS
+
                           _refreshData();
                         },
                       ),
@@ -260,36 +281,13 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
 
-                // ── Item Grid ──
-                Consumer<ItemProvider>(
-                  builder: (context, itemProvider, _) {
-                    final items = _getFilteredItems(itemProvider.items);
-
-                    if (items.isEmpty) {
-                      return SliverFillRemaining(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.search_off_rounded, size: 72, color: Colors.grey.shade200),
-                              const SizedBox(height: 14),
-                              Text(
-                                'No items found',
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.grey.shade500),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                _controller.text.isNotEmpty ? 'Try a different search term' : 'No items in this category',
-                                style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
+                Selector<ItemProvider, List<MenuModel>>(
+                  selector: (_, p) => p.items,
+                  builder: (context, items, _) {
+                    final list = items;
 
                     return SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(15, 8, 15, 15),
+                      padding: const EdgeInsets.fromLTRB(13, 10, 13, 16),
                       sliver: SliverLayoutBuilder(
                         builder: (context, constraints) {
                           int crossAxisCount;
@@ -297,30 +295,32 @@ class _HomePageState extends State<HomePage> {
                           switch (getScreenType(constraints.crossAxisExtent)) {
                             case ScreenType.desktop:
                               crossAxisCount = 5;
-                              aspectRatio = 1;
+                              aspectRatio = 0.82;
                               break;
                             case ScreenType.tablet:
                               crossAxisCount = 4;
-                              aspectRatio = 0.72;
+                              aspectRatio = 0.76;
                               break;
                             case ScreenType.mobile:
                               crossAxisCount = 2;
-                              aspectRatio = 0.78;
+                              aspectRatio = 0.72; 
                           }
+
                           return SliverGrid(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
+                            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 260,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
                               childAspectRatio: aspectRatio,
                             ),
                             delegate: SliverChildBuilderDelegate((context, index) {
-                              final item = items[index];
+                              final item = list[index];
+
                               return RepaintBoundary(
                                 key: ValueKey('menu-item-${item.itemCode}'),
                                 child: MenuList(item: item, index: index, cartIconKey: _activeCartKey , itemCurr: item.itemCurreny,),
                               );
-                            }, childCount: items.length),
+                            }, childCount: list.length),
                           );
                         },
                       ),
@@ -328,7 +328,6 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
 
-                // ── Pagination Footer ──
                 SliverToBoxAdapter(
                   child: _PaginationFooter(isLoading: _isLoadingMore, hasMore: _hasMorePages, onLoadMore: _loadNextPage),
                 ),
@@ -341,22 +340,26 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+
+
 class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
   final List<CategoryModel> categories;
   final String selectedCategory;
   final TextEditingController controller;
+  final String searchText;
   final Function(String, String?) onSelected;
   final bool isScrolled;
 
-  _CategoryHeaderDelegate({
+  const _CategoryHeaderDelegate({
     required this.categories,
     required this.selectedCategory,
     required this.onSelected,
     required this.isScrolled,
     required this.controller,
+    required this.searchText,
   });
 
-  static const double _extent = 142.0;
+  static const double _extent = 112.0;
 
   @override
   double get minExtent => _extent;
@@ -369,16 +372,18 @@ class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
       old.selectedCategory != selectedCategory ||
       old.categories.length != categories.length ||
       old.isScrolled != isScrolled ||
-      old.controller.text != controller.text;
+      old.searchText != searchText; 
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     final scrolled = shrinkOffset > 1.0 || isScrolled;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headerBg = isDark ? const Color(0xFF161824) : const Color(0xFFF8F8FB);
 
     return Material(
-      color: Colors.transparent,
-      elevation: scrolled ? 2 : 0,
-      shadowColor: Colors.transparent,
+      color: headerBg,
+      elevation: scrolled ? 3 : 0,
+      shadowColor: Colors.black.withOpacity(0.08),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
@@ -392,7 +397,7 @@ class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-// ── Pagination Footer ─────────────────────────────────────────────────────────
+
 class _PaginationFooter extends StatelessWidget {
   final bool isLoading;
   final bool hasMore;
@@ -423,9 +428,14 @@ class _PaginationFooter extends StatelessWidget {
 
     if (isLoading) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(
-          child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFFE8316A))),
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFE8316A))),
+            SizedBox(width: 10),
+            Text("Loading more items...", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+          ],
         ),
       );
     }
@@ -443,6 +453,8 @@ class _PaginationFooter extends StatelessWidget {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFE8316A))),
+              SizedBox(width: 10),
               Icon(Icons.expand_more_rounded, size: 18, color: Color(0xFFE8316A)),
               SizedBox(width: 6),
               Text(
@@ -457,12 +469,13 @@ class _PaginationFooter extends StatelessWidget {
   }
 }
 
-// ── App Bar Widgets (same as before, kept intact) ─────────────────────────────
+
 class _AppBarBackground extends StatelessWidget {
   final StoreModel? stop;
   final GlobalKey cartIconExpandedKey;
   final String dbCode;
   final String? tableCode;
+
   const _AppBarBackground({required this.stop, required this.cartIconExpandedKey, required this.dbCode, this.tableCode});
 
   @override
@@ -504,19 +517,13 @@ class _AppBarBackground extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AutoSizeText(
-                            stop?.dbName ?? '',
-                            minFontSize: 13,
-                            maxFontSize: 18,
-                            style: TextStyle(fontSize: 18.h, fontWeight: FontWeight.bold, color: context.appColors.textPrimary, letterSpacing: -0.5),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      child: AutoSizeText(
+                        stop?.dbName ?? '',
+                        minFontSize: 13,
+                        maxFontSize: 18,
+                        style: TextStyle(fontSize: 18.h, fontWeight: FontWeight.bold, color: context.appColors.textPrimary, letterSpacing: -0.5),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const Row(
@@ -538,15 +545,10 @@ class _AppBarBackground extends StatelessWidget {
                               color: themeProvider.isDark ? const Color(0xFF252837) : const Color(0xFFF2F2F7),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                              child: Icon(
-                                themeProvider.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                                key: ValueKey(themeProvider.isDark),
-                                size: 20,
-                                color: themeProvider.isDark ? const Color(0xFFFFD166) : Colors.grey.shade600,
-                              ),
+                            child: Icon(
+                              themeProvider.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                              size: 20,
+                              color: themeProvider.isDark ? const Color(0xFFFFD166) : Colors.grey.shade600,
                             ),
                           ),
                         );
@@ -568,6 +570,7 @@ class _AppBarTitle extends StatelessWidget {
   final GlobalKey cartIconCollapsedKey;
   final String dbCode;
   final String? tableCode;
+
   const _AppBarTitle({required this.stop, required this.cartIconCollapsedKey, required this.dbCode, this.tableCode});
 
   @override
@@ -591,7 +594,6 @@ class _AppBarTitle extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-
               Consumer<ProviderListener>(
                 builder: (context, themeProvider, _) {
                   return GestureDetector(
@@ -604,15 +606,10 @@ class _AppBarTitle extends StatelessWidget {
                         color: themeProvider.isDark ? const Color(0xFF252837) : const Color(0xFFF2F2F7),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                        child: Icon(
-                          themeProvider.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                          key: ValueKey(themeProvider.isDark),
-                          size: 20,
-                          color: themeProvider.isDark ? const Color(0xFFFFD166) : Colors.grey.shade600,
-                        ),
+                      child: Icon(
+                        themeProvider.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                        size: 20,
+                        color: themeProvider.isDark ? const Color(0xFFFFD166) : Colors.grey.shade600,
                       ),
                     ),
                   );

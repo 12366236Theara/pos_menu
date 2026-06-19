@@ -44,13 +44,13 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _router = GoRouter(
       routes: [
-        GoRoute(path: '/admin/location', builder: (context, state) => const AdminSetLocationPage()),
+        // GoRoute(path: '/admin/location', builder: (context, state) => const AdminSetLocationPage()),
         GoRoute(
           path: '/:dbCode',
           builder: (context, state) {
             final dbCode = state.pathParameters['dbCode']!;
-            final tableCode = state.uri.queryParameters['table'];
-            return HomePage(dbCode: dbCode, tableCode: tableCode);
+            // final tableCode = state.uri.queryParameters['table'];
+            return HomePage(dbCode: dbCode);
           },
         ),
       ],
@@ -68,7 +68,6 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => ShopLocationProvider(), lazy: true),
       ],
 
-      // ✅ Consumer reads themeMode from ProviderListener — single source of truth
       child: Consumer<ProviderListener>(
         builder: (context, providerListener, _) {
           return ScreenUtilInit(
@@ -81,7 +80,6 @@ class _MyAppState extends State<MyApp> {
 
               themeMode: providerListener.themeMode,
 
-              // ── Light Theme ──────────────────────────────────────────────
               theme: ThemeData(
                 brightness: Brightness.light,
                 fontFamily: 'NotoSans',
